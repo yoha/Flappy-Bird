@@ -18,15 +18,10 @@ class GameScene: SKScene {
     // MARK: - Methods Override
     
     override func didMoveToView(view: SKView) {
-        /* Setup your scene here */
-        let birdTexture1 = SKTexture(imageNamed: "flappy1")
-        let birdTexture2 = SKTexture(imageNamed: "flappy2")
-        let animateBirdTextures = SKAction.animateWithTextures([birdTexture1, birdTexture2], timePerFrame: 0.1)
-        let repeatAnimateBirdTexturesForever = SKAction.repeatActionForever(animateBirdTextures)
         
-        bird = SKSpriteNode(texture: birdTexture1)
-        bird.position = CGPoint(x: CGRectGetMidX(self.frame), y: CGRectGetMidY(self.frame))
-        bird.runAction(repeatAnimateBirdTexturesForever)
+        // **********************
+        // ***** Background *****
+        // **********************
         
         let backgroundTexture = SKTexture(imageNamed: "background")
         let animateBackground = SKAction.moveByX(-backgroundTexture.size().width, y: 0, duration: 9)
@@ -40,7 +35,35 @@ class GameScene: SKScene {
             background.runAction(repeatAnimateBackgroundForever)
             self.addChild(background)
         }
+        
+        // **********************
+        // ******** Bird ********
+        // **********************
+        
+        let birdTexture1 = SKTexture(imageNamed: "flappy1")
+        let birdTexture2 = SKTexture(imageNamed: "flappy2")
+        let animateBirdTextures = SKAction.animateWithTextures([birdTexture1, birdTexture2], timePerFrame: 0.1)
+        let repeatAnimateBirdTexturesForever = SKAction.repeatActionForever(animateBirdTextures)
+        
+        bird = SKSpriteNode(texture: birdTexture1)
+        bird.position = CGPoint(x: CGRectGetMidX(self.frame), y: CGRectGetMidY(self.frame))
+        bird.runAction(repeatAnimateBirdTexturesForever)
+        
+        // applying physics (i.e., physics, inertia) to birdie
+        bird.physicsBody = SKPhysicsBody(circleOfRadius: self.bird.size.height / 2)
+        bird.physicsBody!.dynamic = true
+        bird.physicsBody!.allowsRotation = false // <-- disallow the bird to spin
         self.addChild(bird)
+        
+        // **********************
+        // ******* Ground *******
+        // **********************
+        
+        let ground = SKNode()
+        ground.position = CGPoint(x: 0, y: 0)
+        ground.physicsBody = SKPhysicsBody(rectangleOfSize: CGSize(width: self.frame.size.width, height: 1))
+        ground.physicsBody!.dynamic = false // <-- making it immune against gravity
+        self.addChild(ground)
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
