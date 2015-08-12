@@ -55,7 +55,7 @@ class GameScene: SKScene {
         self.bird.physicsBody = SKPhysicsBody(circleOfRadius: self.bird.size.height / 2)
         self.bird.physicsBody!.dynamic = true
         self.bird.physicsBody!.allowsRotation = false // <-- disallow the bird to spin
-        self.bird.zPosition = 1 // <-- making it the foremost sprite in the view
+        self.bird.zPosition = 1 // <-- making it the foremost sprite in the view stack
         self.addChild(bird)
         
         // **********************
@@ -73,19 +73,24 @@ class GameScene: SKScene {
         // **********************
         
         let gapSizeBetweenPipes = self.bird.size.height * 4
-        // each pipe can move (max) up / down 1/4 of the screen's height, which leaves 1/2 of screen's height remaining for movement (1/4 + 1/4 + 1/2 = 1)
-        let rangeOfPipesMovement = arc4random() % UInt32(self.frame.size.height / 2) // <-- between 0 and 1/2 of the screen's height
-        let pipesMovementOffset = CGFloat(rangeOfPipesMovement) - self.frame.size.height / 4 // shifting it down by another 1/4 of the screen's height if needed. meaning it can have a max value of a 1/4 screen's height up & a min value of a 1/4 screen's height down.
+        // each pipe can move (max) up / down 1/4 of the screen's height, which leaves 1/2 of screen's height remaining for gap (1/4 + 1/4 + 1/2 = 1)
+        let rangeOfPipesVerticalMovement = arc4random() % UInt32(self.frame.size.height / 2) // <-- between 0 and 1/2 of the screen's height
+        let pipesVerticalMovementOffset = CGFloat(rangeOfPipesVerticalMovement) - self.frame.size.height / 4 // shifting it down by another 1/4 of the screen's height if needed. meaning it can have a max value of a 1/4 screen's height up & a min value of a 1/4 screen's height down.
         
+        let animatePipe = SKAction.moveByX(-self.frame.size.width * 2, y: 0, duration: NSTimeInterval(self.frame.size.width / 100)) // <-- 100pxl/sec
+        let removePipes = SKAction.removeFromParent()
+        let animateAndRemovePipes = SKAction.sequence([animatePipe, removePipes])
         
         let pipeTexture1 = SKTexture(imageNamed: "pipe1")
         self.pipe = SKSpriteNode(texture: pipeTexture1)
-        self.pipe.position = CGPoint(x: CGRectGetMidX(self.frame), y: CGRectGetMidY(self.frame) + self.pipe.size.height / 2 + gapSizeBetweenPipes / 2 + pipesMovementOffset)
+        self.pipe.position = CGPoint(x: CGRectGetMidX(self.frame) + self.frame.size.width, y: CGRectGetMidY(self.frame) + self.pipe.size.height / 2 + gapSizeBetweenPipes / 2 + pipesVerticalMovementOffset)
+        self.pipe.runAction(animateAndRemovePipes)
         self.addChild(pipe)
         
         let pipeTexture2 = SKTexture(imageNamed: "pipe2")
         self.pipe = SKSpriteNode(texture: pipeTexture2)
-        self.pipe.position = CGPoint(x: CGRectGetMidX(self.frame), y: CGRectGetMidY(self.frame) - self.pipe.size.height / 2 - gapSizeBetweenPipes / 2 + pipesMovementOffset)
+        self.pipe.position = CGPoint(x: CGRectGetMidX(self.frame) + self.frame.width, y: CGRectGetMidY(self.frame) - self.pipe.size.height / 2 - gapSizeBetweenPipes / 2 + pipesVerticalMovementOffset)
+        self.pipe.runAction(animateAndRemovePipes)
         self.addChild(pipe)
         
         
