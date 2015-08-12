@@ -72,7 +72,7 @@ class GameScene: SKScene {
         // ******** Pipes *******
         // **********************
         
-        let timer = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "spawnPipes", userInfo: nil, repeats: true)
+        let _ = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "spawnPipes", userInfo: nil, repeats: true)
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
@@ -87,7 +87,7 @@ class GameScene: SKScene {
     // MARK: - Local Methods
     
     func spawnPipes() {
-        let gapSizeBetweenPipes = self.bird.size.height * 4
+        let gapSizeBetweenPipes: CGFloat = self.bird.size.height * 4
         // each pipe can move (max) up / down 1/4 of the screen's height, which leaves 1/2 of screen's height remaining for gap (1/4 + 1/4 + 1/2 = 1)
         let rangeOfPipesVerticalMovement = arc4random() % UInt32(self.frame.size.height / 2) // <-- between 0 and 1/2 of the screen's height
         let pipesVerticalMovementOffset = CGFloat(rangeOfPipesVerticalMovement) - self.frame.size.height / 4 // shifting it down by another 1/4 of the screen's height if needed. meaning it can have a max value of a 1/4 screen's height up & a min value of a 1/4 screen's height down.
@@ -96,15 +96,20 @@ class GameScene: SKScene {
         let removePipes = SKAction.removeFromParent()
         let animateAndRemovePipes = SKAction.sequence([animatePipe, removePipes])
         
-        let pipeTexture1 = SKTexture(imageNamed: "pipe1")
-        self.pipe = SKSpriteNode(texture: pipeTexture1)
-        self.pipe.position = CGPoint(x: CGRectGetMidX(self.frame) + self.frame.size.width, y: CGRectGetMidY(self.frame) + self.pipe.size.height / 2 + gapSizeBetweenPipes / 2 + pipesVerticalMovementOffset)
-        self.pipe.runAction(animateAndRemovePipes)
-        self.addChild(pipe)
-        
-        let pipeTexture2 = SKTexture(imageNamed: "pipe2")
-        self.pipe = SKSpriteNode(texture: pipeTexture2)
-        self.pipe.position = CGPoint(x: CGRectGetMidX(self.frame) + self.frame.width, y: CGRectGetMidY(self.frame) - self.pipe.size.height / 2 - gapSizeBetweenPipes / 2 + pipesVerticalMovementOffset)
+        self.setupPipe("pipe1", gapSizeBetweenPipes: gapSizeBetweenPipes, pipesVerticalMovementOffset: pipesVerticalMovementOffset, animateAndRemovePipes: animateAndRemovePipes)
+        self.setupPipe("pipe2", gapSizeBetweenPipes: gapSizeBetweenPipes, pipesVerticalMovementOffset: pipesVerticalMovementOffset, animateAndRemovePipes: animateAndRemovePipes)
+    }
+    
+    func setupPipe(textureName: String, gapSizeBetweenPipes: CGFloat, pipesVerticalMovementOffset: CGFloat, animateAndRemovePipes: SKAction) {
+        let pipeTexture = SKTexture(imageNamed: textureName)
+        self.pipe = SKSpriteNode(texture: pipeTexture)
+        self.pipe.position = textureName == "pipe1"
+            ?
+            CGPoint(x: CGRectGetMidX(self.frame) + self.frame.size.width, y: CGRectGetMidY(self.frame) + self.pipe.size.height / 2 + gapSizeBetweenPipes / 2 + pipesVerticalMovementOffset)
+            :
+            CGPoint(x: CGRectGetMidX(self.frame) + self.frame.size.width, y: CGRectGetMidY(self.frame) - self.pipe.size.height / 2 - gapSizeBetweenPipes / 2 + pipesVerticalMovementOffset)
+        self.pipe.physicsBody = SKPhysicsBody(rectangleOfSize: self.pipe.size)
+        self.pipe.physicsBody!.dynamic = false
         self.pipe.runAction(animateAndRemovePipes)
         self.addChild(pipe)
     }
