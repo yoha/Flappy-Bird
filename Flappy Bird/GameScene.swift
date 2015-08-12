@@ -72,6 +72,21 @@ class GameScene: SKScene {
         // ******** Pipes *******
         // **********************
         
+        let timer = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "spawnPipes", userInfo: nil, repeats: true)
+    }
+    
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        self.bird.physicsBody!.velocity = CGVectorMake(0, 0) // <-- set the bird's velocity to 0 so it doesn't fly off the screen when tapped
+        self.bird.physicsBody!.applyImpulse(CGVectorMake(0, 50)) // <-- apply momentum vertically to make the bird "jump"
+    }
+   
+    override func update(currentTime: CFTimeInterval) {
+        /* Called before each frame is rendered */
+    }
+    
+    // MARK: - Local Methods
+    
+    func spawnPipes() {
         let gapSizeBetweenPipes = self.bird.size.height * 4
         // each pipe can move (max) up / down 1/4 of the screen's height, which leaves 1/2 of screen's height remaining for gap (1/4 + 1/4 + 1/2 = 1)
         let rangeOfPipesVerticalMovement = arc4random() % UInt32(self.frame.size.height / 2) // <-- between 0 and 1/2 of the screen's height
@@ -92,17 +107,5 @@ class GameScene: SKScene {
         self.pipe.position = CGPoint(x: CGRectGetMidX(self.frame) + self.frame.width, y: CGRectGetMidY(self.frame) - self.pipe.size.height / 2 - gapSizeBetweenPipes / 2 + pipesVerticalMovementOffset)
         self.pipe.runAction(animateAndRemovePipes)
         self.addChild(pipe)
-        
-        
-        
-    }
-    
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        self.bird.physicsBody!.velocity = CGVectorMake(0, 0) // <-- set the bird's velocity to 0 so it doesn't fly off the screen when tapped
-        self.bird.physicsBody!.applyImpulse(CGVectorMake(0, 50)) // <-- apply momentum vertically to make the bird "jump"
-    }
-   
-    override func update(currentTime: CFTimeInterval) {
-        /* Called before each frame is rendered */
     }
 }
