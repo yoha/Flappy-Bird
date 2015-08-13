@@ -8,7 +8,7 @@
 
 import SpriteKit
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Local Properties
     
@@ -16,13 +16,21 @@ class GameScene: SKScene {
     var bird: SKSpriteNode!
     var ground: SKNode!
     var pipe: SKSpriteNode!
+    let birdGroup: UInt32 = 1
+    let physicalObjectGroup: UInt32 = 2
+    var isGameOver = false
+    let backgroundAndPipesGroupingNode = SKNode()
     
     // MARK: - Methods Override
     
     override func didMoveToView(view: SKView) {
         
+        self.physicsWorld.contactDelegate = self
+        self.physicsWorld.gravity = CGVectorMake(0, -4.5) // <-- default is (0.0, -9.8)
+        self.addChild(self.backgroundAndPipesGroupingNode)
+        
         // **********************
-        // ***** Background *****
+        // ***** MARK: Background
         // **********************
         
         let backgroundTexture = SKTexture(imageNamed: "background")
@@ -35,11 +43,11 @@ class GameScene: SKScene {
             self.background.position = CGPoint(x: backgroundTexture.size().width / 2 + backgroundTexture.size().width * i, y: CGRectGetMidY(self.frame))
             self.background.size.height = self.frame.height
             self.background.runAction(repeatAnimateBackgroundForever)
-            self.addChild(background)
+            self.backgroundAndPipesGroupingNode.addChild(self.background)
         }
         
         // **********************
-        // ******** Bird ********
+        // *********** MARK: Bird
         // **********************
         
         let birdTexture1 = SKTexture(imageNamed: "flappy1")
@@ -55,36 +63,49 @@ class GameScene: SKScene {
         self.bird.physicsBody = SKPhysicsBody(circleOfRadius: self.bird.size.height / 2)
         self.bird.physicsBody!.dynamic = true
         self.bird.physicsBody!.allowsRotation = false // <-- disallow the bird to spin
+        self.bird.physicsBody!.categoryBitMask = self.birdGroup
+        self.bird.physicsBody!.collisionBitMask = self.physicalObjectGroup
+        self.bird.physicsBody!.contactTestBitMask = self.physicalObjectGroup
         self.bird.zPosition = 1 // <-- making it the foremost sprite in the view stack
         self.addChild(bird)
         
         // **********************
-        // ******* Ground *******
+        // ********* MARK: Ground
         // **********************
         
         self.ground = SKNode()
         self.ground.position = CGPoint(x: 0, y: 0)
         self.ground.physicsBody = SKPhysicsBody(rectangleOfSize: CGSize(width: self.frame.size.width, height: 1))
         self.ground.physicsBody!.dynamic = false // <-- making it immune against gravity
+        self.ground.physicsBody!.categoryBitMask = self.physicalObjectGroup
         self.addChild(ground)
         
         // **********************
-        // ******** Pipes *******
+        // ********** MARK: Pipes
         // **********************
         
         let _ = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "spawnPipes", userInfo: nil, repeats: true)
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        self.bird.physicsBody!.velocity = CGVectorMake(0, 0) // <-- set the bird's velocity to 0 so it doesn't fly off the screen when tapped
-        self.bird.physicsBody!.applyImpulse(CGVectorMake(0, 50)) // <-- apply momentum vertically to make the bird "jump"
+        if !self.isGameOver {
+            self.bird.physicsBody!.velocity = CGVectorMake(0, 0) // <-- set the bird's velocity to 0 so it doesn't fly off the screen when tapped
+            self.bird.physicsBody!.applyImpulse(CGVectorMake(0, 50)) // <-- apply momentum vertically to make the bird "jump"
+        }
     }
-   
+    
+    func didBeginContact(contact: SKPhysicsContact) {
+        print("contact")
+        self.isGameOver = true
+        self.bird.speed = 0
+        self.backgroundAndPipesGroupingNode.speed = 0
+    }
+    
     override func update(currentTime: CFTimeInterval) {
         /* Called before each frame is rendered */
     }
     
-    // MARK: - Local Methods
+    // MARK: - Custom Methods
     
     func spawnPipes() {
         let gapSizeBetweenPipes: CGFloat = self.bird.size.height * 4
@@ -110,7 +131,8 @@ class GameScene: SKScene {
             CGPoint(x: CGRectGetMidX(self.frame) + self.frame.size.width, y: CGRectGetMidY(self.frame) - self.pipe.size.height / 2 - gapSizeBetweenPipes / 2 + pipesVerticalMovementOffset)
         self.pipe.physicsBody = SKPhysicsBody(rectangleOfSize: self.pipe.size)
         self.pipe.physicsBody!.dynamic = false
+        self.pipe.physicsBody!.categoryBitMask = self.physicalObjectGroup
         self.pipe.runAction(animateAndRemovePipes)
-        self.addChild(pipe)
+        self.backgroundAndPipesGroupingNode.addChild(self.pipe)
     }
 }
