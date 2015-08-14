@@ -31,12 +31,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var gameScoreLabel: SKLabelNode!
     var gameOverLabel: SKLabelNode!
     
+    let gravityValue: CGFloat = -4.0 // <-- default is (0.0, -9.8)
+    let verticalMomentum: CGFloat = 40
+    
     // MARK: - Methods Override
     
     override func didMoveToView(view: SKView) {
         
         self.physicsWorld.contactDelegate = self
-        self.physicsWorld.gravity = CGVectorMake(0, -2.0) // <-- default is (0.0, -9.8)
+        self.physicsWorld.gravity = CGVectorMake(0, self.gravityValue)
         self.addChild(self.backgroundAndPipesGroupingNode)
         self.addChild(self.labelHolder)
         
@@ -112,7 +115,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if !self.isGameOver {
             self.bird.physicsBody!.velocity = CGVectorMake(0, 0) // <-- set the bird's velocity to 0 so it doesn't fly off the screen when tapped
-            self.bird.physicsBody!.applyImpulse(CGVectorMake(0, 30)) // <-- apply momentum vertically to make the bird "jump"
+            self.bird.physicsBody!.applyImpulse(CGVectorMake(0, self.verticalMomentum)) // <-- apply momentum vertically to make the bird "jump"
         }
         else {
             
