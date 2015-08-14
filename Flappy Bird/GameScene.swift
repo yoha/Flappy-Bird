@@ -17,6 +17,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var ground: SKNode!
     var skyLimit: SKNode!
     var pipe: SKSpriteNode!
+    var labelHolder = SKSpriteNode()
     
     let skyGroup: UInt32 = 1
     let birdGroup: UInt32 = 2
@@ -27,8 +28,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let backgroundAndPipesGroupingNode = SKNode()
     
     var gameScore = 0
-    let gameScoreLabel = SKLabelNode()
-    let gameOverLabel = SKLabelNode()
+    var gameScoreLabel: SKLabelNode!
+    var gameOverLabel: SKLabelNode!
     
     // MARK: - Methods Override
     
@@ -37,28 +38,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.physicsWorld.contactDelegate = self
         self.physicsWorld.gravity = CGVectorMake(0, -2.0) // <-- default is (0.0, -9.8)
         self.addChild(self.backgroundAndPipesGroupingNode)
+        self.addChild(self.labelHolder)
         
         // **********************
         // ***** MARK: Background
         // **********************
         
-        let backgroundTexture = SKTexture(imageNamed: "background")
-        let animateBackground = SKAction.moveByX(-backgroundTexture.size().width, y: 0, duration: 9)
-        let animateBackgroundReplacement = SKAction.moveByX(backgroundTexture.size().width, y: 0, duration: 0)
-        let repeatAnimateBackgroundForever = SKAction.repeatActionForever(SKAction.sequence([animateBackground, animateBackgroundReplacement]))
-        
-        for index in 0...2 {
-            self.background = SKSpriteNode(texture: backgroundTexture)
-            self.background.position = CGPoint(x: backgroundTexture.size().width / 2 + backgroundTexture.size().width * CGFloat(index), y: CGRectGetMidY(self.frame))
-            self.background.size.height = self.frame.height
-            self.background.runAction(repeatAnimateBackgroundForever)
-            self.backgroundAndPipesGroupingNode.addChild(self.background)
-        }
+        self.generateBackground()
         
         // **********************
         // MARK: Game Score Label
         // **********************
         
+        self.gameScoreLabel = SKLabelNode()
         self.gameScoreLabel.fontName = "Avenir"
         self.gameScoreLabel.fontSize = 65
         self.gameScoreLabel.text = "0"
@@ -114,13 +106,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // ********** MARK: Pipes
         // **********************
         
-        let _ = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "spawnPipes", userInfo: nil, repeats: true)
+        let _ = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "generatePipes", userInfo: nil, repeats: true)
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if !self.isGameOver {
             self.bird.physicsBody!.velocity = CGVectorMake(0, 0) // <-- set the bird's velocity to 0 so it doesn't fly off the screen when tapped
             self.bird.physicsBody!.applyImpulse(CGVectorMake(0, 30)) // <-- apply momentum vertically to make the bird "jump"
+        }
+        else {
+            
+            // **********************
+            // *** MARK: Restart Game
+            // **********************
+            
+            self.gameScore = 0
+            self.gameScoreLabel.text = "0"
+            self.backgroundAndPipesGroupingNode.removeAllChildren()
+            self.generateBackground()
+            self.bird.position = CGPoint(x: CGRectGetMidX(self.frame), y: CGRectGetMidX(self.frame))
+            self.bird.physicsBody!.velocity = CGVectorMake(0, 0)
+            self.labelHolder.removeAllChildren()
+            self.isGameOver = false
+            self.backgroundAndPipesGroupingNode.speed = 1
         }
     }
     
@@ -137,11 +145,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.bird.speed = 0
             self.backgroundAndPipesGroupingNode.speed = 0
             
+            // **********************
+            // MARK: Game Over Label
+            // **********************
+            
+            self.gameOverLabel = SKLabelNode()
             self.gameOverLabel.fontName = "Avenir"
             self.gameOverLabel.fontSize = 30
             self.gameOverLabel.text = "Game Over! Tap to play again."
             self.gameOverLabel.position = CGPointMake(CGRectGetMidX(self.frame), CGRectGetMidY(self.frame))
-            self.addChild(self.gameOverLabel)
+            self.labelHolder.addChild(self.gameOverLabel)
         }
     }
     
@@ -151,7 +164,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Custom Methods
     
-    func spawnPipes() {
+    func generateBackground() {
+        let backgroundTexture = SKTexture(imageNamed: "background")
+        let animateBackground = SKAction.moveByX(-backgroundTexture.size().width, y: 0, duration: 9)
+        let animateBackgroundReplacement = SKAction.moveByX(backgroundTexture.size().width, y: 0, duration: 0)
+        let repeatAnimateBackgroundForever = SKAction.repeatActionForever(SKAction.sequence([animateBackground, animateBackgroundReplacement]))
+        
+        for index in 0...2 {
+            self.background = SKSpriteNode(texture: backgroundTexture)
+            self.background.position = CGPoint(x: backgroundTexture.size().width / 2 + backgroundTexture.size().width * CGFloat(index), y: CGRectGetMidY(self.frame))
+            self.background.size.height = self.frame.height
+            self.background.runAction(repeatAnimateBackgroundForever)
+            self.backgroundAndPipesGroupingNode.addChild(self.background)
+        }
+    }
+    
+    func generatePipes() {
         let verticalGapSizeBetweenPipes: CGFloat = self.bird.size.height * 4
         // each pipe can move (max) up / down 1/4 of the screen's height, which leaves 1/2 of screen's height remaining for gap (1/4 + 1/4 + 1/2 = 1)
         let rangeOfPipesVerticalMovement = arc4random() % UInt32(self.frame.size.height / 2) // <-- between 0 and 1/2 of the screen's height
