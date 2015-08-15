@@ -34,6 +34,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let gravityValue: CGFloat = -4.0 // <-- default is (0.0, -9.8)
     let verticalMomentum: CGFloat = 40
     
+    var numberOfTouchReceived = 0
+    var timer: NSTimer!
+    
     // MARK: - Methods Override
     
     override func didMoveToView(view: SKView) {
@@ -70,7 +73,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let repeatAnimateBirdTexturesForever = SKAction.repeatActionForever(animateBirdTextures)
         
         self.bird = SKSpriteNode(texture: birdTexture1)
-        self.bird.position = CGPoint(x: CGRectGetMidX(self.frame), y: CGRectGetMidY(self.frame))
+        self.bird.position = CGPoint(x: CGRectGetMidX(self.frame) - 130, y: CGRectGetMidY(self.frame))
         self.bird.runAction(repeatAnimateBirdTexturesForever)
         
         // applying physics (i.e., physics, inertia) to birdie
@@ -109,7 +112,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // ********** MARK: Pipes
         // **********************
         
-        let _ = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "generatePipes", userInfo: nil, repeats: true)
+//        let _ = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "generatePipes", userInfo: nil, repeats: true)
         
         // ************************
         // MARK: Pipes & Background
@@ -120,9 +123,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if !self.isGameOver {
+            ++self.numberOfTouchReceived
             self.bird.physicsBody!.velocity = CGVectorMake(0, 0) // <-- set the bird's velocity to 0 so it doesn't fly off the screen when tapped
             self.bird.physicsBody!.dynamic = true
             self.bird.physicsBody!.applyImpulse(CGVectorMake(0, self.verticalMomentum)) // <-- apply momentum vertically to make the bird "jump"
+            if self.numberOfTouchReceived == 1 {
+                self.timer = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "generatePipes", userInfo: nil, repeats: true)
+            }
         }
         else {
             
@@ -134,13 +141,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.gameScoreLabel.text = "0"
             self.backgroundAndPipesGroupingNode.removeAllChildren()
             self.generateBackground()
-            self.bird.position = CGPoint(x: CGRectGetMidX(self.frame), y: CGRectGetMidX(self.frame))
+            self.bird.position = CGPoint(x: CGRectGetMidX(self.frame) - 130, y: CGRectGetMidX(self.frame))
             self.bird.physicsBody!.velocity = CGVectorMake(0, 0)
             self.bird.physicsBody!.dynamic = false
             self.bird.speed = 1
             self.labelHolder.removeAllChildren()
             self.isGameOver = false
             self.backgroundAndPipesGroupingNode.speed = 0.8
+            self.numberOfTouchReceived = 0
+            self.timer.invalidate()
         }
     }
     
