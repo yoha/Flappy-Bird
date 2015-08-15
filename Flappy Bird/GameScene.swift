@@ -75,7 +75,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // applying physics (i.e., physics, inertia) to birdie
         self.bird.physicsBody = SKPhysicsBody(circleOfRadius: self.bird.size.height / 2)
-        self.bird.physicsBody!.dynamic = true
+        self.bird.physicsBody!.dynamic = false
         self.bird.physicsBody!.allowsRotation = false // <-- disallow the bird to spin
         self.bird.physicsBody!.categoryBitMask = self.birdGroup
 //        self.bird.physicsBody!.collisionBitMask = self.birdGroup
@@ -110,11 +110,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // **********************
         
         let _ = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "generatePipes", userInfo: nil, repeats: true)
+        
+        // ************************
+        // MARK: Pipes & Background
+        // ************************
+        
+        self.backgroundAndPipesGroupingNode.speed = 0.8
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         if !self.isGameOver {
             self.bird.physicsBody!.velocity = CGVectorMake(0, 0) // <-- set the bird's velocity to 0 so it doesn't fly off the screen when tapped
+            self.bird.physicsBody!.dynamic = true
             self.bird.physicsBody!.applyImpulse(CGVectorMake(0, self.verticalMomentum)) // <-- apply momentum vertically to make the bird "jump"
         }
         else {
@@ -129,9 +136,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.generateBackground()
             self.bird.position = CGPoint(x: CGRectGetMidX(self.frame), y: CGRectGetMidX(self.frame))
             self.bird.physicsBody!.velocity = CGVectorMake(0, 0)
+            self.bird.physicsBody!.dynamic = false
+            self.bird.speed = 1
             self.labelHolder.removeAllChildren()
             self.isGameOver = false
-            self.backgroundAndPipesGroupingNode.speed = 1
+            self.backgroundAndPipesGroupingNode.speed = 0.8
         }
     }
     
