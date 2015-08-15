@@ -31,8 +31,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var gameScoreLabel: SKLabelNode!
     var gameOverLabel: SKLabelNode!
     
-    let gravityValue: CGFloat = -4.0 // <-- default is (0.0, -9.8)
-    let verticalMomentum: CGFloat = 40
+    let gravityValue: CGFloat = -9.8 // <-- default is (0.0, -9.8)
+    let verticalMomentum: CGFloat = 65
     
     var numberOfTouchReceived = 0
     var timer: NSTimer!
