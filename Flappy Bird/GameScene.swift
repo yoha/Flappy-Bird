@@ -17,7 +17,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var ground: SKNode!
     var skyLimit: SKNode!
     var pipe: SKSpriteNode!
-    var labelHolder = SKSpriteNode()
     
     let skyGroup: UInt32 = 1
     let birdGroup: UInt32 = 2
@@ -29,10 +28,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var gameScore = 0
     var gameScoreLabel: SKLabelNode!
-    var gameOverLabel: SKLabelNode!
     
     let gravityValue: CGFloat = -9.8 // <-- default is (0.0, -9.8)
-    let verticalMomentum: CGFloat = 65
+    let verticalMomentum: CGFloat = 55
+    let birdHorizontalPositionOffset: CGFloat = 130
     
     var numberOfTouchReceived = 0
     var timer: NSTimer!
@@ -44,7 +43,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.physicsWorld.contactDelegate = self
         self.physicsWorld.gravity = CGVectorMake(0, self.gravityValue)
         self.addChild(self.backgroundAndPipesGroupingNode)
-        self.addChild(self.labelHolder)
         
         // **********************
         // ***** MARK: Background
@@ -73,7 +71,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let repeatAnimateBirdTexturesForever = SKAction.repeatActionForever(animateBirdTextures)
         
         self.bird = SKSpriteNode(texture: birdTexture1)
-        self.bird.position = CGPoint(x: CGRectGetMidX(self.frame) - 130, y: CGRectGetMidY(self.frame))
+        self.bird.position = CGPoint(x: CGRectGetMidX(self.frame) - self.birdHorizontalPositionOffset, y: CGRectGetMidY(self.frame))
         self.bird.runAction(repeatAnimateBirdTexturesForever)
         
         // applying physics (i.e., physics, inertia) to birdie
@@ -108,12 +106,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.skyLimit.physicsBody!.categoryBitMask = self.skyGroup
         self.addChild(self.skyLimit)
         
-        // **********************
-        // ********** MARK: Pipes
-        // **********************
-        
-//        let _ = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "generatePipes", userInfo: nil, repeats: true)
-        
         // ************************
         // MARK: Pipes & Background
         // ************************
@@ -127,29 +119,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.bird.physicsBody!.velocity = CGVectorMake(0, 0) // <-- set the bird's velocity to 0 so it doesn't fly off the screen when tapped
             self.bird.physicsBody!.dynamic = true
             self.bird.physicsBody!.applyImpulse(CGVectorMake(0, self.verticalMomentum)) // <-- apply momentum vertically to make the bird "jump"
+            
+            // **********************
+            // ********** MARK: Pipes
+            // **********************
+            
             if self.numberOfTouchReceived == 1 {
                 self.timer = NSTimer.scheduledTimerWithTimeInterval(3, target: self, selector: "generatePipes", userInfo: nil, repeats: true)
             }
-        }
-        else {
-            
-            // **********************
-            // *** MARK: Restart Game
-            // **********************
-            
-            self.gameScore = 0
-            self.gameScoreLabel.text = "0"
-            self.backgroundAndPipesGroupingNode.removeAllChildren()
-            self.generateBackground()
-            self.bird.position = CGPoint(x: CGRectGetMidX(self.frame) - 130, y: CGRectGetMidX(self.frame))
-            self.bird.physicsBody!.velocity = CGVectorMake(0, 0)
-            self.bird.physicsBody!.dynamic = false
-            self.bird.speed = 1
-            self.labelHolder.removeAllChildren()
-            self.isGameOver = false
-            self.backgroundAndPipesGroupingNode.speed = 0.8
-            self.numberOfTouchReceived = 0
-            self.timer.invalidate()
         }
     }
     
@@ -165,17 +142,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.isGameOver = true
             self.bird.speed = 0
             self.backgroundAndPipesGroupingNode.speed = 0
-            
-            // **********************
-            // MARK: Game Over Label
-            // **********************
-            
-            self.gameOverLabel = SKLabelNode()
-            self.gameOverLabel.fontName = "Avenir"
-            self.gameOverLabel.fontSize = 30
-            self.gameOverLabel.text = "Game Over! Tap to play again."
-            self.gameOverLabel.position = CGPointMake(CGRectGetMidX(self.frame), CGRectGetMidY(self.frame))
-            self.labelHolder.addChild(self.gameOverLabel)
+            self.userInteractionEnabled = false
+            let alertController = UIAlertController(title: "Game Over", message: "What you gonna do?", preferredStyle: UIAlertControllerStyle.Alert)
+            alertController.addAction(UIAlertAction(title: "Play Again!", style: UIAlertActionStyle.Default, handler: restartGame))
+            alertController.addAction(UIAlertAction(title: "Quit...", style: UIAlertActionStyle.Cancel, handler: nil))
+            self.view?.window?.rootViewController?.presentViewController(alertController, animated: true, completion: nil)
         }
     }
     
@@ -241,5 +212,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.pipe.physicsBody!.categoryBitMask = self.physicalObjectGroup
         self.pipe.runAction(animateAndRemovePipes)
         self.backgroundAndPipesGroupingNode.addChild(self.pipe)
+    }
+    
+    func restartGame(action: UIAlertAction) {
+        self.userInteractionEnabled = true
+        self.gameScore = 0
+        self.gameScoreLabel.text = "0"
+        self.backgroundAndPipesGroupingNode.removeAllChildren()
+        self.generateBackground()
+        self.bird.position = CGPoint(x: CGRectGetMidX(self.frame) - self.birdHorizontalPositionOffset, y: CGRectGetMidX(self.frame))
+        self.bird.physicsBody!.velocity = CGVectorMake(0, 0)
+        self.bird.physicsBody!.dynamic = false
+        self.bird.speed = 1
+        self.isGameOver = false
+        self.backgroundAndPipesGroupingNode.speed = 0.8
+        self.numberOfTouchReceived = 0
+        self.timer.invalidate()
     }
 }

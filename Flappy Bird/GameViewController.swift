@@ -28,6 +28,7 @@ class GameViewController: UIViewController {
             
             skView.presentScene(scene)
         }
+        
     }
 
     override func shouldAutorotate() -> Bool {
@@ -49,5 +50,12 @@ class GameViewController: UIViewController {
 
     override func prefersStatusBarHidden() -> Bool {
         return true
+    }
+    
+    // MARK: - Custom Methods
+    
+    func showGameIsOverAlert(object: AnyObject) {
+        let alertController = UIAlertController(title: "Game Over", message: "What you're gonna do?", preferredStyle: UIAlertControllerStyle.Alert)
+        alertController.addAction(UIAlertAction(title: "Play Again!", style: UIAlertActionStyle.Default, handler: nil))
     }
 }
